@@ -28,6 +28,10 @@
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
+  :root[data-theme="light"] {
+    --asphalt: #f2f0ea; --asphalt-2: #ffffff; --asphalt-3: #ece9e1;
+    --line: #d8d4c8; --ink: #1b1d22; --ink-dim: #5c6272; --ink-faint: #8a8f9c;
+  }
   body {
     margin: 0; background: var(--asphalt); color: var(--ink); font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
@@ -132,9 +136,13 @@
   <div class="hero">
     <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;">
       <span class="badge">Data Analytics Project</span>
-      <button id="themeToggle" aria-label="Toggle dark/light mode"
+      <button id="themeToggle" aria-label="Toggle dark/light mode" class="no-print"
         style="background:var(--asphalt-3); border:1px solid var(--line); color:var(--ink); border-radius:8px; padding:8px 14px; font-family:var(--font-mono); font-size:12px; cursor:pointer;">
         ☀ / ☾ Toggle theme
+      </button>
+      <button id="printBtn" aria-label="Download as PDF" class="no-print"
+        style="background:var(--yellow); border:none; color:var(--asphalt); border-radius:8px; padding:8px 14px; font-family:var(--font-mono); font-size:12px; font-weight:700; cursor:pointer;">
+        ⬇ Download as PDF
       </button>
     </div>
     <h1 class="title">Road Safety<br><span>on India's Highways</span></h1>
@@ -145,25 +153,39 @@
 
   <div class="kpi-row">
     <div class="kpi">
-      <div class="label">Total accidents · 2024</div>
+      <div class="label">Total accidents · <span id="yearLabelAcc">2024</span></div>
       <div class="value" id="kpi-acc">0</div>
       <div class="sub" style="color:var(--red);">↑ 1.5% vs 2023</div>
     </div>
     <div class="kpi">
-      <div class="label">Fatalities · 2024</div>
+      <div class="label">Fatalities · <span id="yearLabelKill">2024</span></div>
       <div class="value accent-red" id="kpi-kill">0</div>
       <div class="sub" style="color:var(--red);">↑ 2.5% vs 2023</div>
     </div>
     <div class="kpi">
-      <div class="label">Leading cause</div>
+      <div class="label">Leading cause · 2024</div>
       <div class="value accent-yellow" style="font-size:20px;">Over-speeding</div>
       <div class="sub">70.7% of all accidents</div>
     </div>
     <div class="kpi">
-      <div class="label">Riskiest window</div>
-      <div class="value accent-yellow" style="font-size:20px;">18:00–21:00</div>
-      <div class="sub">21.1% of accidents occur here</div>
+      <div class="label">Riskiest window · <span id="yearLabelTime">2024</span></div>
+      <div class="value accent-yellow" style="font-size:20px;" id="kpi-risktime">18:00–21:00</div>
+      <div class="sub" id="kpi-riskpct">21.1% of accidents occur here</div>
     </div>
+  </div>
+
+  <div class="panel no-print" style="margin-bottom:24px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h2 style="margin:0;">Scrub through the years</h2>
+      <span id="yearSliderVal" style="font-family:var(--font-mono); font-size:20px; color:var(--yellow); font-weight:700;">2024</span>
+    </div>
+    <div class="note">Drag to see how accidents, fatalities and the state map change year by year</div>
+    <input type="range" id="yearSlider" min="2020" max="2024" step="1" value="2024" style="width:100%; margin-top:10px; accent-color:var(--yellow);">
+  </div>
+
+  <div class="fact-banner" style="background:var(--asphalt-3); border:1px solid var(--line); border-left:3px solid var(--yellow); border-radius:8px; padding:14px 18px; margin-bottom:30px; min-height:24px; display:flex; align-items:center;">
+    <span style="font-family:var(--font-mono); font-size:11px; color:var(--yellow); margin-right:10px; flex:none;">DID YOU KNOW</span>
+    <span id="factText" style="font-size:13.5px; color:var(--ink-dim); transition:opacity 0.4s;"></span>
   </div>
 
   <div class="grid">
@@ -227,6 +249,20 @@
   </div>
 
   <h3 class="section-title">India at a glance</h3>
+  <div class="grid thirds" style="margin-bottom:16px;">
+    <div class="panel" style="border-left:3px solid var(--green);">
+      <h2 style="color:var(--green);">🛡 Safest state</h2>
+      <div class="note">Lowest fatality rate, 2024 (among states with 500+ accidents)</div>
+      <div id="safestState" style="font-family:var(--font-head); font-size:24px; text-transform:uppercase; margin-top:8px;">—</div>
+      <div id="safestStat" style="font-size:12.5px; color:var(--ink-dim); margin-top:4px;"></div>
+    </div>
+    <div class="panel" style="border-left:3px solid var(--red);">
+      <h2 style="color:var(--red);">⚠ Most dangerous state</h2>
+      <div class="note">Highest fatality rate, 2024 (among states with 500+ accidents)</div>
+      <div id="dangerState" style="font-family:var(--font-head); font-size:24px; text-transform:uppercase; margin-top:8px;">—</div>
+      <div id="dangerStat" style="font-size:12.5px; color:var(--ink-dim); margin-top:4px;"></div>
+    </div>
+  </div>
   <div class="panel">
     <h2>State grid map</h2>
     <div class="note">Each tile = one state/UT, positioned by approximate location, colored by 2024 accident count. Darker = higher. (Grid layout, not exact borders.)</div>
@@ -301,9 +337,9 @@
 const DATA = {"state_acc": [{"state_ut": "Andhra Pradesh", "accidents_2020": 19509.0, "accidents_2021": 21556, "accidents_2022": 21249, "accidents_2023": 19949, "accidents_2024": 19557}, {"state_ut": "Arunachal Pradesh", "accidents_2020": 134.0, "accidents_2021": 283, "accidents_2022": 227, "accidents_2023": 287, "accidents_2024": 277}, {"state_ut": "Assam", "accidents_2020": 6595.0, "accidents_2021": 7411, "accidents_2022": 7023, "accidents_2023": 7421, "accidents_2024": 7848}, {"state_ut": "Bihar", "accidents_2020": 8639.0, "accidents_2021": 9553, "accidents_2022": 10801, "accidents_2023": 11014, "accidents_2024": 11610}, {"state_ut": "Chhattisgarh", "accidents_2020": 11656.0, "accidents_2021": 12375, "accidents_2022": 13279, "accidents_2023": 13468, "accidents_2024": 14857}, {"state_ut": "Goa", "accidents_2020": 2375.0, "accidents_2021": 2849, "accidents_2022": 3011, "accidents_2023": 2846, "accidents_2024": 2682}, {"state_ut": "Gujarat", "accidents_2020": 13398.0, "accidents_2021": 15186, "accidents_2022": 15751, "accidents_2023": 16349, "accidents_2024": 15588}, {"state_ut": "Haryana", "accidents_2020": 9431.0, "accidents_2021": 9933, "accidents_2022": 10429, "accidents_2023": 10463, "accidents_2024": 9806}, {"state_ut": "Himachal Pradesh", "accidents_2020": 2239.0, "accidents_2021": 2404, "accidents_2022": 2597, "accidents_2023": 2253, "accidents_2024": 2156}, {"state_ut": "Jharkhand", "accidents_2020": 4405.0, "accidents_2021": 4728, "accidents_2022": 5175, "accidents_2023": 5315, "accidents_2024": 5196}, {"state_ut": "Karnataka", "accidents_2020": 34178.0, "accidents_2021": 34647, "accidents_2022": 39762, "accidents_2023": 43440, "accidents_2024": 43062}, {"state_ut": "Kerala", "accidents_2020": 27877.0, "accidents_2021": 33296, "accidents_2022": 43910, "accidents_2023": 48091, "accidents_2024": 48834}, {"state_ut": "Madhya Pradesh", "accidents_2020": 45266.0, "accidents_2021": 48877, "accidents_2022": 54432, "accidents_2023": 55327, "accidents_2024": 56669}, {"state_ut": "Maharashtra", "accidents_2020": 24971.0, "accidents_2021": 29477, "accidents_2022": 33383, "accidents_2023": 35243, "accidents_2024": 36118}, {"state_ut": "Manipur", "accidents_2020": 432.0, "accidents_2021": 366, "accidents_2022": 508, "accidents_2023": 398, "accidents_2024": 299}, {"state_ut": "Meghalaya", "accidents_2020": 214.0, "accidents_2021": 245, "accidents_2022": 246, "accidents_2023": 223, "accidents_2024": 269}, {"state_ut": "Mizoram", "accidents_2020": 53.0, "accidents_2021": 69, "accidents_2022": 133, "accidents_2023": 106, "accidents_2024": 118}, {"state_ut": "Nagaland", "accidents_2020": 500.0, "accidents_2021": 746, "accidents_2022": 489, "accidents_2023": 303, "accidents_2024": 129}, {"state_ut": "Odisha", "accidents_2020": 9817.0, "accidents_2021": 10983, "accidents_2022": 11663, "accidents_2023": 11992, "accidents_2024": 12375}, {"state_ut": "Punjab", "accidents_2020": 5203.0, "accidents_2021": 5871, "accidents_2022": 6138, "accidents_2023": 6269, "accidents_2024": 6063}, {"state_ut": "Rajasthan", "accidents_2020": 19114.0, "accidents_2021": 20951, "accidents_2022": 23614, "accidents_2023": 24694, "accidents_2024": 24838}, {"state_ut": "Sikkim", "accidents_2020": 138.0, "accidents_2021": 155, "accidents_2022": 211, "accidents_2023": 182, "accidents_2024": 149}, {"state_ut": "Tamil Nadu", "accidents_2020": 49844.0, "accidents_2021": 55682, "accidents_2022": 64105, "accidents_2023": 67213, "accidents_2024": 67526}, {"state_ut": "Telangana", "accidents_2020": 19172.0, "accidents_2021": 21315, "accidents_2022": 21619, "accidents_2023": 22903, "accidents_2024": 25986}, {"state_ut": "Tripura", "accidents_2020": 466.0, "accidents_2021": 479, "accidents_2022": 575, "accidents_2023": 577, "accidents_2024": 578}, {"state_ut": "Uttarakhand", "accidents_2020": 1041.0, "accidents_2021": 1405, "accidents_2022": 1674, "accidents_2023": 1691, "accidents_2024": 1747}, {"state_ut": "Uttar Pradesh", "accidents_2020": 34243.0, "accidents_2021": 37729, "accidents_2022": 41746, "accidents_2023": 44534, "accidents_2024": 46052}, {"state_ut": "West Bengal", "accidents_2020": 10863.0, "accidents_2021": 11937, "accidents_2022": 13686, "accidents_2023": 13795, "accidents_2024": 13702}, {"state_ut": "Andaman & Nicobar Islands", "accidents_2020": 141.0, "accidents_2021": 115, "accidents_2022": 141, "accidents_2023": 143, "accidents_2024": 135}, {"state_ut": "Chandigarh", "accidents_2020": 159.0, "accidents_2021": 208, "accidents_2022": 237, "accidents_2023": 182, "accidents_2024": 169}, {"state_ut": "D & N Haveli and Daman and Diu", "accidents_2020": 100.0, "accidents_2021": 140, "accidents_2022": 196, "accidents_2023": 182, "accidents_2024": 152}, {"state_ut": "Delhi", "accidents_2020": 4178.0, "accidents_2021": 4720, "accidents_2022": 5652, "accidents_2023": 5834, "accidents_2024": 5657}, {"state_ut": "Jammu and Kashmir", "accidents_2020": 4860.0, "accidents_2021": 5452, "accidents_2022": 6092, "accidents_2023": 6298, "accidents_2024": 5808}, {"state_ut": "Ladakh", "accidents_2020": 0.0, "accidents_2021": 236, "accidents_2022": 374, "accidents_2023": 289, "accidents_2024": 264}, {"state_ut": "Lakshadweep", "accidents_2020": 1.0, "accidents_2021": 4, "accidents_2022": 3, "accidents_2023": 1, "accidents_2024": 0}, {"state_ut": "Puducherry", "accidents_2020": 969.0, "accidents_2021": 1049, "accidents_2022": 1181, "accidents_2023": 1308, "accidents_2024": 1431}], "violation": [{"violation_type": "Over-speeding", "accidents_2023": 328727, "killed_2023": 117682, "injured_2023": 320416, "accidents_2024": 345024, "killed_2024": 124522, "injured_2024": 334045}, {"violation_type": "Drunken driving / Consumption of alcohol & drug", "accidents_2023": 9143, "killed_2023": 3674, "injured_2023": 8421, "accidents_2024": 8270, "killed_2024": 3204, "injured_2024": 8046}, {"violation_type": "Driving on wrong side / lane indiscipline", "accidents_2023": 25242, "killed_2023": 9432, "injured_2023": 24435, "accidents_2024": 22530, "killed_2024": 8327, "injured_2024": 22467}, {"violation_type": "Jumping red light", "accidents_2023": 2440, "killed_2023": 818, "injured_2023": 2157, "accidents_2024": 1559, "killed_2024": 528, "injured_2024": 1648}, {"violation_type": "Use of mobile phone", "accidents_2023": 7122, "killed_2023": 2884, "injured_2023": 6445, "accidents_2024": 4935, "killed_2024": 2002, "injured_2024": 4831}, {"violation_type": "Others", "accidents_2023": 107909, "killed_2023": 38400, "injured_2023": 100951, "accidents_2024": 105389, "killed_2024": 38592, "injured_2024": 100404}], "weather": [{"weather_condition": "Sunny / clear", "accidents_2023": 365865, "accidents_2024": 372387, "killed_2023": 125065, "killed_2024": 128513, "injured_2023": 359074, "injured_2024": 365546}, {"weather_condition": "Rainy", "accidents_2023": 37316, "accidents_2024": 35284, "killed_2023": 13734, "killed_2024": 12665, "injured_2023": 36102, "injured_2024": 35540}, {"weather_condition": "Foggy & misty", "accidents_2023": 34266, "accidents_2024": 33955, "killed_2023": 14617, "killed_2024": 15115, "injured_2023": 30646, "injured_2024": 29827}, {"weather_condition": "Hail / sleet", "accidents_2023": 3378, "accidents_2024": 4310, "killed_2023": 1516, "killed_2024": 1919, "injured_2023": 3064, "injured_2024": 3835}, {"weather_condition": "Others", "accidents_2023": 39758, "accidents_2024": 41771, "killed_2023": 17958, "killed_2024": 18963, "injured_2023": 33939, "injured_2024": 36693}], "month": [{"month": "January", "accidents_2020": 40409, "killed_2020": 13529, "accidents_2021": 40305, "killed_2021": 14575, "accidents_2022": 37040, "killed_2022": 13677, "accidents_2023": 41841, "killed_2023": 14610, "accidents_2024": 40980, "killed_2024": 14398}, {"month": "February", "accidents_2020": 39905, "killed_2020": 13823, "accidents_2021": 37339, "killed_2021": 13864, "accidents_2022": 36617, "killed_2022": 13536, "accidents_2023": 39022, "killed_2023": 14279, "accidents_2024": 40023, "killed_2024": 14477}, {"month": "March", "accidents_2020": 32744, "killed_2020": 11646, "accidents_2021": 39491, "killed_2021": 14579, "accidents_2022": 40356, "killed_2022": 14859, "accidents_2023": 40549, "killed_2023": 14907, "accidents_2024": 43145, "killed_2024": 15809}, {"month": "April", "accidents_2020": 8389, "killed_2020": 3388, "accidents_2021": 31240, "killed_2021": 12226, "accidents_2022": 39033, "killed_2022": 14530, "accidents_2023": 39138, "killed_2023": 14438, "accidents_2024": 41781, "killed_2024": 15683}, {"month": "May", "accidents_2020": 20458, "killed_2020": 8261, "accidents_2021": 22530, "killed_2021": 10338, "accidents_2022": 43307, "killed_2022": 16791, "accidents_2023": 43578, "killed_2023": 16718, "accidents_2024": 43289, "killed_2024": 16070}, {"month": "June", "accidents_2020": 27946, "killed_2020": 11048, "accidents_2021": 29142, "killed_2021": 11985, "accidents_2022": 39432, "killed_2022": 14762, "accidents_2023": 40968, "killed_2023": 15253, "accidents_2024": 40031, "killed_2024": 14929}, {"month": "July", "accidents_2020": 27674, "killed_2020": 10527, "accidents_2021": 32627, "killed_2021": 12275, "accidents_2022": 36677, "killed_2022": 13119, "accidents_2023": 38088, "killed_2023": 13381, "accidents_2024": 36483, "killed_2024": 13033}, {"month": "August", "accidents_2020": 29753, "killed_2020": 11419, "accidents_2021": 33781, "killed_2021": 12109, "accidents_2022": 36451, "killed_2022": 12758, "accidents_2023": 38466, "killed_2023": 12843, "accidents_2024": 37651, "killed_2024": 12959}, {"month": "September", "accidents_2020": 31370, "killed_2020": 11722, "accidents_2021": 33269, "killed_2021": 11553, "accidents_2022": 34804, "killed_2022": 12071, "accidents_2023": 38143, "killed_2023": 12732, "accidents_2024": 37781, "killed_2024": 12841}, {"month": "October", "accidents_2020": 35376, "killed_2020": 12991, "accidents_2021": 36354, "killed_2021": 12763, "accidents_2022": 38650, "killed_2022": 13796, "accidents_2023": 40018, "killed_2023": 13822, "accidents_2024": 41986, "killed_2024": 15047}, {"month": "November", "accidents_2020": 38368, "killed_2020": 14624, "accidents_2021": 37581, "killed_2021": 13623, "accidents_2022": 38991, "killed_2022": 13888, "accidents_2023": 39775, "killed_2023": 14524, "accidents_2024": 42413, "killed_2024": 15922}, {"month": "December", "accidents_2020": 39789, "killed_2020": 15405, "accidents_2021": 38773, "killed_2021": 14082, "accidents_2022": 39954, "killed_2022": 14704, "accidents_2023": 40997, "killed_2023": 15383, "accidents_2024": 42144, "killed_2024": 16007}], "time_of_day": [{"time_interval": "06:00-09:00 hrs (Day)", "accidents_2020": 40431, "pct_2020": 10.9, "accidents_2021": 43370, "pct_2021": 10.5, "accidents_2022": 48304, "pct_2022": 10.5, "accidents_2023": 48872, "pct_2023": 10.2, "accidents_2024": 49395, "pct_2024": 10.1}, {"time_interval": "09:00-12:00 hrs (Day)", "accidents_2020": 55474, "pct_2020": 14.9, "accidents_2021": 61387, "pct_2021": 14.9, "accidents_2022": 65664, "pct_2022": 14.2, "accidents_2023": 67580, "pct_2023": 14.1, "accidents_2024": 68287, "pct_2024": 14.0}, {"time_interval": "12:00-15:00 hrs (Day)", "accidents_2020": 56570, "pct_2020": 15.2, "accidents_2021": 63139, "pct_2021": 15.3, "accidents_2022": 67979, "pct_2022": 14.7, "accidents_2023": 71697, "pct_2023": 14.9, "accidents_2024": 71386, "pct_2024": 14.6}, {"time_interval": "15:00-18:00 hrs (Day)", "accidents_2020": 65676, "pct_2020": 17.6, "accidents_2021": 73467, "pct_2021": 17.8, "accidents_2022": 79637, "pct_2022": 17.3, "accidents_2023": 84479, "pct_2023": 17.6, "accidents_2024": 85010, "pct_2024": 17.4}, {"time_interval": "18:00-21:00 hrs (Night)", "accidents_2020": 74198, "pct_2020": 19.9, "accidents_2021": 85179, "pct_2021": 20.7, "accidents_2022": 94009, "pct_2022": 20.4, "accidents_2023": 99945, "pct_2023": 20.8, "accidents_2024": 102897, "pct_2024": 21.1}, {"time_interval": "21:00-24:00 hrs (Night)", "accidents_2020": 37693, "pct_2020": 10.1, "accidents_2021": 41092, "pct_2021": 10.0, "accidents_2022": 52915, "pct_2022": 11.5, "accidents_2023": 55157, "pct_2023": 11.5, "accidents_2024": 56215, "pct_2024": 11.5}, {"time_interval": "00:00-03:00 hrs (Night)", "accidents_2020": 18466, "pct_2020": 5.0, "accidents_2021": 19682, "pct_2021": 4.8, "accidents_2022": 23471, "pct_2022": 5.1, "accidents_2023": 24298, "pct_2023": 5.1, "accidents_2024": 25001, "pct_2024": 5.1}, {"time_interval": "03:00-06:00 hrs (Night)", "accidents_2020": 19782, "pct_2020": 5.3, "accidents_2021": 20120, "pct_2021": 4.9, "accidents_2022": 24152, "pct_2022": 5.2, "accidents_2023": 22794, "pct_2023": 4.7, "accidents_2024": 23398, "pct_2024": 4.8}, {"time_interval": "Unknown Time", "accidents_2020": 3891, "pct_2020": 1.0, "accidents_2021": 4996, "pct_2021": 1.2, "accidents_2022": 5181, "pct_2022": 1.1, "accidents_2023": 5761, "pct_2023": 1.2, "accidents_2024": 6118, "pct_2024": 1.3}], "top_cities": [{"city": "Delhi", "accidents_2020": 4178, "accidents_2021": 4720, "accidents_2022": 5652, "accidents_2023": 5834, "accidents_2024": 5657}, {"city": "Bengaluru", "accidents_2020": 3233, "accidents_2021": 3213, "accidents_2022": 3822, "accidents_2023": 4974, "accidents_2024": 4769}, {"city": "Jabalpur", "accidents_2020": 3226, "accidents_2021": 3855, "accidents_2022": 4046, "accidents_2023": 4205, "accidents_2024": 3928}, {"city": "Hyderabad", "accidents_2020": 2064, "accidents_2021": 2273, "accidents_2022": 2516, "accidents_2023": 2943, "accidents_2024": 3785}, {"city": "Chennai", "accidents_2020": 4389, "accidents_2021": 5034, "accidents_2022": 3452, "accidents_2023": 3653, "accidents_2024": 3762}, {"city": "Indore", "accidents_2020": 3036, "accidents_2021": 3676, "accidents_2022": 4680, "accidents_2023": 3566, "accidents_2024": 3488}, {"city": "Mallapuram", "accidents_2020": 1784, "accidents_2021": 2147, "accidents_2022": 2991, "accidents_2023": 3253, "accidents_2024": 3483}, {"city": "Kochi", "accidents_2020": 1437, "accidents_2021": 1781, "accidents_2022": 2432, "accidents_2023": 2803, "accidents_2024": 3167}, {"city": "Jaipur", "accidents_2020": 1940, "accidents_2021": 2165, "accidents_2022": 2687, "accidents_2023": 2915, "accidents_2024": 3115}, {"city": "Bhopal", "accidents_2020": 2295, "accidents_2021": 2616, "accidents_2022": 3313, "accidents_2023": 2906, "accidents_2024": 2900}], "age": [{"age_group": "Less than 18", "killed_2023": 9489, "killed_2024": 10117}, {"age_group": "18-25", "killed_2023": 34482, "killed_2024": 34154}, {"age_group": "25-35", "killed_2023": 43398, "killed_2024": 44581}, {"age_group": "35-45", "killed_2023": 36981, "killed_2024": 38291}, {"age_group": "45-60", "killed_2023": 29421, "killed_2024": 30560}, {"age_group": "Above 60", "killed_2023": 14428, "killed_2024": 14767}, {"age_group": "Age not known", "killed_2023": 4691, "killed_2024": 4705}], "license": [{"license_type": "Valid driving licence", "accidents_2020": 264991, "accidents_2021": 290261, "accidents_2022": 320235, "accidents_2023": 340960, "accidents_2024": 332462}, {"license_type": "Learner's licence", "accidents_2020": 19117, "accidents_2021": 19184, "accidents_2022": 18298, "accidents_2023": 16074, "accidents_2024": 16494}, {"license_type": "Without valid licence", "accidents_2020": 34716, "accidents_2021": 37182, "accidents_2022": 35925, "accidents_2023": 33827, "accidents_2024": 35347}, {"license_type": "Not known", "accidents_2020": 53357, "accidents_2021": 65805, "accidents_2022": 86854, "accidents_2023": 89722, "accidents_2024": 103404}], "state_kill": [{"state_ut": "Andhra Pradesh", "killed_2020": 7039.0, "killed_2021": 8186, "killed_2022": 8293, "killed_2023": 8137, "killed_2024": 8346}, {"state_ut": "Arunachal Pradesh", "killed_2020": 73.0, "killed_2021": 157, "killed_2022": 148, "killed_2023": 145, "killed_2024": 168}, {"state_ut": "Assam", "killed_2020": 2629.0, "killed_2021": 3036, "killed_2022": 2994, "killed_2023": 3296, "killed_2024": 3351}, {"state_ut": "Bihar", "killed_2020": 6699.0, "killed_2021": 7660, "killed_2022": 8898, "killed_2023": 8873, "killed_2024": 9347}, {"state_ut": "Chhattisgarh", "killed_2020": 4606.0, "killed_2021": 5371, "killed_2022": 5834, "killed_2023": 6166, "killed_2024": 6945}, {"state_ut": "Goa", "killed_2020": 223.0, "killed_2021": 226, "killed_2022": 271, "killed_2023": 290, "killed_2024": 286}, {"state_ut": "Gujarat", "killed_2020": 6170.0, "killed_2021": 7452, "killed_2022": 7618, "killed_2023": 7854, "killed_2024": 7717}, {"state_ut": "Haryana", "killed_2020": 4507.0, "killed_2021": 4706, "killed_2022": 4915, "killed_2023": 4968, "killed_2024": 4689}, {"state_ut": "Himachal Pradesh", "killed_2020": 893.0, "killed_2021": 1052, "killed_2022": 1032, "killed_2023": 889, "killed_2024": 869}, {"state_ut": "Jharkhand", "killed_2020": 3044.0, "killed_2021": 3513, "killed_2022": 3898, "killed_2023": 4173, "killed_2024": 4114}, {"state_ut": "Karnataka", "killed_2020": 9760.0, "killed_2021": 10038, "killed_2022": 11702, "killed_2023": 12321, "killed_2024": 12390}, {"state_ut": "Kerala", "killed_2020": 2979.0, "killed_2021": 3429, "killed_2022": 4317, "killed_2023": 4080, "killed_2024": 3880}, {"state_ut": "Madhya Pradesh", "killed_2020": 11141.0, "killed_2021": 12057, "killed_2022": 13427, "killed_2023": 13798, "killed_2024": 14791}, {"state_ut": "Maharashtra", "killed_2020": 11569.0, "killed_2021": 13528, "killed_2022": 15224, "killed_2023": 15366, "killed_2024": 15715}, {"state_ut": "Manipur", "killed_2020": 127.0, "killed_2021": 110, "killed_2022": 127, "killed_2023": 73, "killed_2024": 72}, {"state_ut": "Meghalaya", "killed_2020": 144.0, "killed_2021": 187, "killed_2022": 162, "killed_2023": 168, "killed_2024": 197}, {"state_ut": "Mizoram", "killed_2020": 42.0, "killed_2021": 56, "killed_2022": 113, "killed_2023": 96, "killed_2024": 110}, {"state_ut": "Nagaland", "killed_2020": 53.0, "killed_2021": 55, "killed_2022": 73, "killed_2023": 86, "killed_2024": 62}, {"state_ut": "Odisha", "killed_2020": 4738.0, "killed_2021": 5081, "killed_2022": 5467, "killed_2023": 5739, "killed_2024": 6142}, {"state_ut": "Punjab", "killed_2020": 3898.0, "killed_2021": 4589, "killed_2022": 4756, "killed_2023": 4829, "killed_2024": 4759}, {"state_ut": "Rajasthan", "killed_2020": 9250.0, "killed_2021": 10043, "killed_2022": 11104, "killed_2023": 11762, "killed_2024": 11790}, {"state_ut": "Sikkim", "killed_2020": 47.0, "killed_2021": 56, "killed_2022": 92, "killed_2023": 57, "killed_2024": 67}, {"state_ut": "Tamil Nadu", "killed_2020": 14527.0, "killed_2021": 15384, "killed_2022": 17884, "killed_2023": 18347, "killed_2024": 18449}, {"state_ut": "Telangana", "killed_2020": 6882.0, "killed_2021": 7557, "killed_2022": 7559, "killed_2023": 7660, "killed_2024": 7949}, {"state_ut": "Tripura", "killed_2020": 192.0, "killed_2021": 194, "killed_2022": 241, "killed_2023": 261, "killed_2024": 226}, {"state_ut": "Uttarakhand", "killed_2020": 674.0, "killed_2021": 820, "killed_2022": 1042, "killed_2023": 1054, "killed_2024": 1090}, {"state_ut": "Uttar Pradesh", "killed_2020": 19149.0, "killed_2021": 21227, "killed_2022": 22595, "killed_2023": 23652, "killed_2024": 24118}, {"state_ut": "West Bengal", "killed_2020": 5128.0, "killed_2021": 5800, "killed_2022": 6002, "killed_2023": 6027, "killed_2024": 6676}, {"state_ut": "Andaman & Nicobar Islands", "killed_2020": 14.0, "killed_2021": 20, "killed_2022": 19, "killed_2023": 24, "killed_2024": 29}, {"state_ut": "Chandigarh", "killed_2020": 53.0, "killed_2021": 96, "killed_2022": 83, "killed_2023": 67, "killed_2024": 75}, {"state_ut": "D & N Haveli and Daman and Diu", "killed_2020": 64.0, "killed_2021": 76, "killed_2022": 90, "killed_2023": 74, "killed_2024": 95}, {"state_ut": "Delhi", "killed_2020": 1196.0, "killed_2021": 1239, "killed_2022": 1461, "killed_2023": 1457, "killed_2024": 1551}, {"state_ut": "Jammu and Kashmir", "killed_2020": 728.0, "killed_2021": 774, "killed_2022": 805, "killed_2023": 893, "killed_2024": 831}, {"state_ut": "Ladakh", "killed_2020": 0.0, "killed_2021": 56, "killed_2022": 62, "killed_2023": 59, "killed_2024": 61}, {"state_ut": "Lakshadweep", "killed_2020": 0.0, "killed_2021": 1, "killed_2022": 2, "killed_2023": 0, "killed_2024": 0}, {"state_ut": "Puducherry", "killed_2020": 145.0, "killed_2021": 140, "killed_2022": 181, "killed_2023": 149, "killed_2024": 218}]};
 
 Chart.defaults.font.family = "'Inter', sans-serif";
-Chart.defaults.color = '#a5a8b3';
+Chart.defaults.color = '#8a8f9c';
 Chart.defaults.font.size = 11;
-const gridColor = '#333947';
+const gridColor = 'rgba(140,145,160,0.25)';
 function grid(show) { return { color: gridColor, display: show }; }
 
 const palette = {
@@ -321,8 +357,7 @@ function countUp(el, target, duration) {
   }
   requestAnimationFrame(tick);
 }
-countUp(document.getElementById('kpi-acc'), 487707, 1400);
-countUp(document.getElementById('kpi-kill'), 177175, 1400);
+// initial KPI values come from updateForYear(2024) call below
 
 // ---- Trend chart ----
 const years = [2020,2021,2022,2023,2024];
@@ -412,6 +447,51 @@ function renderStateRows(list) {
 }
 renderStateRows(allSorted);
 
+// ---- Print / Download as PDF ----
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+const printStyle = document.createElement('style');
+printStyle.textContent = `@media print {
+  body { background: white !important; color: #111 !important; }
+  .panel, .kpi { background: #fff !important; border-color: #ccc !important; }
+  .no-print { display: none !important; }
+  canvas { max-width: 100% !important; }
+}`;
+document.head.appendChild(printStyle);
+
+// ---- Did you know: rotating facts ----
+const facts = [
+  "Over-speeding alone causes more than 70% of all road accidents in India (2024).",
+  "The 18:00–21:00 evening window sees 21.1% of all accidents — the single riskiest 3-hour slot.",
+  "Tamil Nadu recorded 67,526 accidents in 2024 — the highest of any state.",
+  "National accidents rose from 3,72,181 (2020) to 4,87,707 (2024) — a 31% increase in five years.",
+  "Drivers aged 25–35 account for the largest share of road fatalities (44,581 deaths in 2024).",
+  "Sunny/clear weather accounts for the majority of accidents — simply because most driving happens in clear weather.",
+  "Madhya Pradesh recorded the highest number of road fatalities of any state in 2024 (14,791).",
+];
+let factIdx = 0;
+const factEl = document.getElementById('factText');
+function showFact(i) {
+  factEl.style.opacity = 0;
+  setTimeout(() => { factEl.textContent = facts[i]; factEl.style.opacity = 1; }, 400);
+}
+showFact(0);
+setInterval(() => { factIdx = (factIdx + 1) % facts.length; showFact(factIdx); }, 5000);
+
+// ---- Safest / most dangerous state spotlight ----
+const eligible = DATA.state_acc
+  .filter(r => (r.accidents_2024 || 0) >= 500)
+  .map(r => {
+    const k = DATA.state_kill.find(x => x.state_ut === r.state_ut) || {};
+    const rate = r.accidents_2024 ? (k.killed_2024 || 0) / r.accidents_2024 * 100 : 0;
+    return { state: r.state_ut, rate, acc: r.accidents_2024, killed: k.killed_2024 || 0 };
+  });
+const safest = eligible.reduce((a,b) => b.rate < a.rate ? b : a);
+const dangerous = eligible.reduce((a,b) => b.rate > a.rate ? b : a);
+document.getElementById('safestState').textContent = safest.state;
+document.getElementById('safestStat').textContent = `${safest.rate.toFixed(1)}% fatality rate (${safest.killed.toLocaleString('en-IN')} killed / ${Math.round(safest.acc).toLocaleString('en-IN')} accidents)`;
+document.getElementById('dangerState').textContent = dangerous.state;
+document.getElementById('dangerStat').textContent = `${dangerous.rate.toFixed(1)}% fatality rate (${dangerous.killed.toLocaleString('en-IN')} killed / ${Math.round(dangerous.acc).toLocaleString('en-IN')} accidents)`;
+
 // ---- Theme toggle (per-viewer, saved locally) ----
 const root = document.documentElement;
 try {
@@ -438,10 +518,8 @@ const gridPos = {
   "Andaman & Nicobar Islands":[10,5],"Lakshadweep":[9,0]
 };
 const gridEl = document.getElementById('indiaGrid');
-const maxAcc = Math.max(...DATA.state_acc.map(r => r.accidents_2024 || 0));
-function accColor(v) {
-  const t = Math.min(v / maxAcc, 1);
-  // interpolate asphalt(42,46,56) -> yellow(255,201,60) -> red(230,71,46)
+function accColorFor(v, max) {
+  const t = Math.min(v / max, 1);
   if (t < 0.5) {
     const k = t / 0.5;
     return `rgb(${42+k*(255-42)}, ${46+k*(201-46)}, ${56+k*(60-56)})`;
@@ -449,15 +527,44 @@ function accColor(v) {
   const k = (t - 0.5) / 0.5;
   return `rgb(${255+k*(230-255)}, ${201+k*(71-201)}, ${60+k*(46-60)})`;
 }
-DATA.state_acc.forEach(r => {
-  const pos = gridPos[r.state_ut];
-  if (!pos) return;
-  const tile = document.createElement('div');
-  tile.title = `${r.state_ut}: ${Math.round(r.accidents_2024).toLocaleString('en-IN')} accidents (2024)`;
-  tile.style.cssText = `grid-row:${pos[0]}; grid-column:${pos[1]}; background:${accColor(r.accidents_2024)}; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:9px; font-family:var(--font-mono); color:#14161b; font-weight:600; cursor:default;`;
-  tile.textContent = r.state_ut.split(' ').map(w => w[0]).join('').slice(0,3).toUpperCase();
-  gridEl.appendChild(tile);
-});
+function renderGridMap(year) {
+  gridEl.innerHTML = '';
+  const max = Math.max(...DATA.state_acc.map(r => r['accidents_'+year] || 0));
+  DATA.state_acc.forEach(r => {
+    const pos = gridPos[r.state_ut];
+    if (!pos) return;
+    const val = r['accidents_'+year] || 0;
+    const tile = document.createElement('div');
+    tile.title = `${r.state_ut}: ${Math.round(val).toLocaleString('en-IN')} accidents (${year})`;
+    tile.style.cssText = `grid-row:${pos[0]}; grid-column:${pos[1]}; background:${accColorFor(val, max)}; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:9px; font-family:var(--font-mono); color:#14161b; font-weight:600; cursor:default;`;
+    tile.textContent = r.state_ut.split(' ').map(w => w[0]).join('').slice(0,3).toUpperCase();
+    gridEl.appendChild(tile);
+  });
+}
+renderGridMap(2024);
+
+// ---- Year slider: drives KPIs + grid map ----
+const yearSlider = document.getElementById('yearSlider');
+const yearSliderVal = document.getElementById('yearSliderVal');
+function updateForYear(year) {
+  yearSliderVal.textContent = year;
+  document.getElementById('yearLabelAcc').textContent = year;
+  document.getElementById('yearLabelKill').textContent = year;
+  document.getElementById('yearLabelTime').textContent = year;
+
+  const totAccY = DATA.state_acc.reduce((s,r) => s + (r['accidents_'+year]||0), 0);
+  const totKillY = DATA.state_kill.reduce((s,r) => s + (r['killed_'+year]||0), 0);
+  document.getElementById('kpi-acc').textContent = Math.round(totAccY).toLocaleString('en-IN');
+  document.getElementById('kpi-kill').textContent = Math.round(totKillY).toLocaleString('en-IN');
+
+  const peak = [...DATA.time_of_day].sort((a,b) => b['pct_'+year] - a['pct_'+year])[0];
+  document.getElementById('kpi-risktime').textContent = peak.time_interval.replace(' hrs','').replace(' (Day)','').replace(' (Night)','');
+  document.getElementById('kpi-riskpct').textContent = `${peak['pct_'+year]}% of accidents occur here`;
+
+  renderGridMap(year);
+}
+yearSlider.addEventListener('input', () => updateForYear(parseInt(yearSlider.value)));
+updateForYear(2024);
 
 // ---- Compare two states ----
 const stateNames = DATA.state_acc.map(r => r.state_ut).sort();
