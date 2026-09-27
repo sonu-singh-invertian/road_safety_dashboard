@@ -1,26 +1,368 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> The Anonymous Hub</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Road Safety Analytics — India 2020–2024</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #12151c;
+    --bg-panel: #191d27;
+    --bg-panel-2: #1f2430;
+    --line: #2a3040;
+    --ink: #eef0f4;
+    --ink-dim: #9aa3b5;
+    --ink-faint: #616b81;
+    --amber: #f2a33e;
+    --red: #e6533f;
+    --teal: #3ecf9e;
+    --blue: #5b8def;
+    --font: 'Inter', system-ui, -apple-system, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+  :root:not([data-theme="light"]) { color-scheme: dark; }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f5f4f0; --bg-panel: #ffffff; --bg-panel-2: #f0efe9;
+      --line: #ddd9cf; --ink: #1b1d22; --ink-dim: #5c6272; --ink-faint: #8a8f9c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12151c; --bg-panel: #191d27; --bg-panel-2: #1f2430;
+    --line: #2a3040; --ink: #eef0f4; --ink-dim: #9aa3b5; --ink-faint: #616b81;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 60px; }
+
+  header.top {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    gap: 20px; flex-wrap: wrap; margin-bottom: 28px; padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .eyebrow { font-family: var(--mono); font-size: 12px; color: var(--amber); letter-spacing: 0.02em; }
+  h1 { font-size: clamp(24px, 4vw, 34px); margin: 6px 0 6px; font-weight: 800; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-dim); font-size: 14px; max-width: 46ch; line-height: 1.5; }
+  .src { font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); text-align: right; line-height: 1.6; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+  @media (max-width: 760px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+  .kpi {
+    background: var(--bg-panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .kpi .label { font-size: 12px; color: var(--ink-dim); margin-bottom: 8px; }
+  .kpi .value { font-family: var(--mono); font-size: 26px; font-weight: 600; letter-spacing: -0.01em; }
+  .kpi .delta { font-size: 12px; margin-top: 6px; }
+  .kpi .delta.up { color: var(--red); }
+  .kpi .delta.down { color: var(--teal); }
+
+  .grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .grid.thirds { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 900px) { .grid.thirds { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--bg-panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 20px 14px;
+  }
+  .panel h2 { font-size: 14px; margin: 0 0 2px; font-weight: 600; }
+  .panel .note { font-size: 12px; color: var(--ink-dim); margin-bottom: 14px; }
+  .chart-box { position: relative; height: 260px; }
+  .chart-box.tall { height: 340px; }
+  .chart-box.short { height: 200px; }
+
+  .callout {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: var(--bg-panel-2); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; margin: 22px 0 26px;
+  }
+  .callout .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); margin-top: 6px; flex: none; }
+  .callout p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--ink-dim); }
+  .callout strong { color: var(--ink); }
+
+  h3.section-title {
+
+
+    
+    font-size: 13px; text-transform: none; color: var(--ink-faint);
+    font-family: var(--mono); margin: 34px 0 12px; letter-spacing: 0.01em;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--ink-faint); font-weight: 500; font-family: var(--mono); font-size: 11px; }
+  td.num { font-family: var(--mono); text-align: right; }
+  tr:last-child td { border-bottom: none; }
+
+  footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--ink-faint); }
+</style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to The Anonymous Hub</h1>
-        <img src="data:image/webp;base64,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" alt="The Anonymous Hub Logo", width="100" >
-        <nav>
-            <ul>
-                <li><a href="#home">Home</a></li>
-                <li><a href="#issue">Issue</a></li>
-                <li><a href="#ghost-box">Ghost Box</a></li>
-                <li><a href="#about">About & Team</a></li>
-                <li><a href="#join-us">Join us</a></li>
-            </ul>
-        </nav>
-    </header>
-   <h1>Explore the world of anonymity and privacy</h1> 
-   <p>"Got campus issues but scared to speak up? This is your safe haven. Drop your worries in our encrypted inbox or connect with friendly seniors secretly. Your identity stays hidden, but your problems get solved."</p>
-   <button><a href="https://t.me/anonymoushub" target="_blank">Join us on Telegram</a></button>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <div class="eyebrow">FINAL YEAR PROJECT — DATA ANALYTICS</div>
+      <h1>Road Safety Analytics, India</h1>
+      <div class="sub">Five-year view of accidents, causes, timing and geography — built from the Ministry of Road Transport &amp; Highways annual report.</div>
+    </div>
+    <div class="src">Source: MoRTH<br>"Road Accidents in India 2024"<br>Years covered: 2020 – 2024</div>
+  </header>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="label">Total accidents, 2024</div>
+      <div class="value">4,87,707</div>
+      <div class="delta up">↑ 1.5% vs 2023</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Fatalities, 2024</div>
+      <div class="value">1,77,175</div>
+      <div class="delta up">↑ 2.5% vs 2023</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Leading cause</div>
+      <div class="value" style="font-size:20px;">Over-speeding</div>
+      <div class="delta" style="color:var(--ink-dim);">70.7% of all accidents</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Riskiest window</div>
+      <div class="value" style="font-size:20px;">18:00–21:00</div>
+      <div class="delta" style="color:var(--ink-dim);">21.1% of accidents occur here</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>National trend</h2>
+      <div class="note">Accidents vs fatalities, 2020–2024</div>
+      <div class="chart-box tall"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2>Traffic violation causing accident</h2>
+      <div class="note">Share of total accidents, 2024</div>
+      <div class="chart-box tall"><canvas id="violationChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="dot"></div>
+    <p><strong>Over-speeding alone accounts for over 70% of all road accidents</strong> in India — more than nine times every other tracked cause combined. Enforcement and road-design interventions targeting speed would have the single largest impact on the national accident count.</p>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Accidents by time of day, 2024</h2>
+      <div class="note">Evening hours (18:00–21:00) are consistently the riskiest window, 2020–2024</div>
+      <div class="chart-box tall"><canvas id="timeChart"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2>Month-wise trend, 2024</h2>
+      <div class="note">Accidents by month</div>
+      <div class="chart-box tall"><canvas id="monthChart"></canvas></div>
+    </div>
+  </div>
+
+  <h3 class="section-title">GEOGRAPHY</h3>
+  <div class="grid">
+    <div class="panel">
+      <h2>Top 10 states by accidents, 2024</h2>
+      <div class="chart-box tall"><canvas id="stateChart"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2>Top 10 Million-Plus cities, 2024</h2>
+      <div class="chart-box tall"><canvas id="cityChart"></canvas></div>
+    </div>
+  </div>
+
+  <h3 class="section-title">CONTEXT</h3>
+  <div class="grid thirds">
+    <div class="panel">
+      <h2>Weather condition</h2>
+      <div class="note">2024 accident share</div>
+      <div class="chart-box short"><canvas id="weatherChart"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2>Victim age group</h2>
+      <div class="note">Fatalities, 2024</div>
+      <div class="chart-box short"><canvas id="ageChart"></canvas></div>
+    </div>
+  </div>
+
+  <h3 class="section-title">STATE-WISE DATA</h3>
+  <div class="panel">
+    <h2>All states &amp; UTs — 2024 accidents</h2>
+    <div class="note">Sorted by number of accidents. Scroll to see all 36.</div>
+    <div style="max-height:320px; overflow-y:auto; margin-top:10px;">
+      <table id="stateTable">
+        <thead><tr><th>#</th><th>State / UT</th><th style="text-align:right;">Accidents 2024</th><th style="text-align:right;">Accidents 2020</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    Built for a B.Tech final-year Data Analytics project · Data: Ministry of Road Transport &amp; Highways, "Road Accidents in India 2024" report · All figures in absolute numbers unless marked %.
+  </footer>
+</div>
+
+<script>
+const DATA = {"state_acc": [{"state_ut": "Andhra Pradesh", "accidents_2020": 19509.0, "accidents_2021": 21556, "accidents_2022": 21249, "accidents_2023": 19949, "accidents_2024": 19557}, {"state_ut": "Arunachal Pradesh", "accidents_2020": 134.0, "accidents_2021": 283, "accidents_2022": 227, "accidents_2023": 287, "accidents_2024": 277}, {"state_ut": "Assam", "accidents_2020": 6595.0, "accidents_2021": 7411, "accidents_2022": 7023, "accidents_2023": 7421, "accidents_2024": 7848}, {"state_ut": "Bihar", "accidents_2020": 8639.0, "accidents_2021": 9553, "accidents_2022": 10801, "accidents_2023": 11014, "accidents_2024": 11610}, {"state_ut": "Chhattisgarh", "accidents_2020": 11656.0, "accidents_2021": 12375, "accidents_2022": 13279, "accidents_2023": 13468, "accidents_2024": 14857}, {"state_ut": "Goa", "accidents_2020": 2375.0, "accidents_2021": 2849, "accidents_2022": 3011, "accidents_2023": 2846, "accidents_2024": 2682}, {"state_ut": "Gujarat", "accidents_2020": 13398.0, "accidents_2021": 15186, "accidents_2022": 15751, "accidents_2023": 16349, "accidents_2024": 15588}, {"state_ut": "Haryana", "accidents_2020": 9431.0, "accidents_2021": 9933, "accidents_2022": 10429, "accidents_2023": 10463, "accidents_2024": 9806}, {"state_ut": "Himachal Pradesh", "accidents_2020": 2239.0, "accidents_2021": 2404, "accidents_2022": 2597, "accidents_2023": 2253, "accidents_2024": 2156}, {"state_ut": "Jharkhand", "accidents_2020": 4405.0, "accidents_2021": 4728, "accidents_2022": 5175, "accidents_2023": 5315, "accidents_2024": 5196}, {"state_ut": "Karnataka", "accidents_2020": 34178.0, "accidents_2021": 34647, "accidents_2022": 39762, "accidents_2023": 43440, "accidents_2024": 43062}, {"state_ut": "Kerala", "accidents_2020": 27877.0, "accidents_2021": 33296, "accidents_2022": 43910, "accidents_2023": 48091, "accidents_2024": 48834}, {"state_ut": "Madhya Pradesh", "accidents_2020": 45266.0, "accidents_2021": 48877, "accidents_2022": 54432, "accidents_2023": 55327, "accidents_2024": 56669}, {"state_ut": "Maharashtra", "accidents_2020": 24971.0, "accidents_2021": 29477, "accidents_2022": 33383, "accidents_2023": 35243, "accidents_2024": 36118}, {"state_ut": "Manipur", "accidents_2020": 432.0, "accidents_2021": 366, "accidents_2022": 508, "accidents_2023": 398, "accidents_2024": 299}, {"state_ut": "Meghalaya", "accidents_2020": 214.0, "accidents_2021": 245, "accidents_2022": 246, "accidents_2023": 223, "accidents_2024": 269}, {"state_ut": "Mizoram", "accidents_2020": 53.0, "accidents_2021": 69, "accidents_2022": 133, "accidents_2023": 106, "accidents_2024": 118}, {"state_ut": "Nagaland", "accidents_2020": 500.0, "accidents_2021": 746, "accidents_2022": 489, "accidents_2023": 303, "accidents_2024": 129}, {"state_ut": "Odisha", "accidents_2020": 9817.0, "accidents_2021": 10983, "accidents_2022": 11663, "accidents_2023": 11992, "accidents_2024": 12375}, {"state_ut": "Punjab", "accidents_2020": 5203.0, "accidents_2021": 5871, "accidents_2022": 6138, "accidents_2023": 6269, "accidents_2024": 6063}, {"state_ut": "Rajasthan", "accidents_2020": 19114.0, "accidents_2021": 20951, "accidents_2022": 23614, "accidents_2023": 24694, "accidents_2024": 24838}, {"state_ut": "Sikkim", "accidents_2020": 138.0, "accidents_2021": 155, "accidents_2022": 211, "accidents_2023": 182, "accidents_2024": 149}, {"state_ut": "Tamil Nadu", "accidents_2020": 49844.0, "accidents_2021": 55682, "accidents_2022": 64105, "accidents_2023": 67213, "accidents_2024": 67526}, {"state_ut": "Telangana", "accidents_2020": 19172.0, "accidents_2021": 21315, "accidents_2022": 21619, "accidents_2023": 22903, "accidents_2024": 25986}, {"state_ut": "Tripura", "accidents_2020": 466.0, "accidents_2021": 479, "accidents_2022": 575, "accidents_2023": 577, "accidents_2024": 578}, {"state_ut": "Uttarakhand", "accidents_2020": 1041.0, "accidents_2021": 1405, "accidents_2022": 1674, "accidents_2023": 1691, "accidents_2024": 1747}, {"state_ut": "Uttar Pradesh", "accidents_2020": 34243.0, "accidents_2021": 37729, "accidents_2022": 41746, "accidents_2023": 44534, "accidents_2024": 46052}, {"state_ut": "West Bengal", "accidents_2020": 10863.0, "accidents_2021": 11937, "accidents_2022": 13686, "accidents_2023": 13795, "accidents_2024": 13702}, {"state_ut": "Andaman & Nicobar Islands", "accidents_2020": 141.0, "accidents_2021": 115, "accidents_2022": 141, "accidents_2023": 143, "accidents_2024": 135}, {"state_ut": "Chandigarh", "accidents_2020": 159.0, "accidents_2021": 208, "accidents_2022": 237, "accidents_2023": 182, "accidents_2024": 169}, {"state_ut": "D & N Haveli and Daman and Diu", "accidents_2020": 100.0, "accidents_2021": 140, "accidents_2022": 196, "accidents_2023": 182, "accidents_2024": 152}, {"state_ut": "Delhi", "accidents_2020": 4178.0, "accidents_2021": 4720, "accidents_2022": 5652, "accidents_2023": 5834, "accidents_2024": 5657}, {"state_ut": "Jammu and Kashmir", "accidents_2020": 4860.0, "accidents_2021": 5452, "accidents_2022": 6092, "accidents_2023": 6298, "accidents_2024": 5808}, {"state_ut": "Ladakh", "accidents_2020": 0.0, "accidents_2021": 236, "accidents_2022": 374, "accidents_2023": 289, "accidents_2024": 264}, {"state_ut": "Lakshadweep", "accidents_2020": 1.0, "accidents_2021": 4, "accidents_2022": 3, "accidents_2023": 1, "accidents_2024": 0}, {"state_ut": "Puducherry", "accidents_2020": 969.0, "accidents_2021": 1049, "accidents_2022": 1181, "accidents_2023": 1308, "accidents_2024": 1431}], "violation": [{"violation_type": "Over-speeding", "accidents_2023": 328727, "killed_2023": 117682, "injured_2023": 320416, "accidents_2024": 345024, "killed_2024": 124522, "injured_2024": 334045}, {"violation_type": "Drunken driving / Consumption of alcohol & drug", "accidents_2023": 9143, "killed_2023": 3674, "injured_2023": 8421, "accidents_2024": 8270, "killed_2024": 3204, "injured_2024": 8046}, {"violation_type": "Driving on wrong side / lane indiscipline", "accidents_2023": 25242, "killed_2023": 9432, "injured_2023": 24435, "accidents_2024": 22530, "killed_2024": 8327, "injured_2024": 22467}, {"violation_type": "Jumping red light", "accidents_2023": 2440, "killed_2023": 818, "injured_2023": 2157, "accidents_2024": 1559, "killed_2024": 528, "injured_2024": 1648}, {"violation_type": "Use of mobile phone", "accidents_2023": 7122, "killed_2023": 2884, "injured_2023": 6445, "accidents_2024": 4935, "killed_2024": 2002, "injured_2024": 4831}, {"violation_type": "Others", "accidents_2023": 107909, "killed_2023": 38400, "injured_2023": 100951, "accidents_2024": 105389, "killed_2024": 38592, "injured_2024": 100404}], "weather": [{"weather_condition": "Sunny / clear", "accidents_2023": 365865, "accidents_2024": 372387, "killed_2023": 125065, "killed_2024": 128513, "injured_2023": 359074, "injured_2024": 365546}, {"weather_condition": "Rainy", "accidents_2023": 37316, "accidents_2024": 35284, "killed_2023": 13734, "killed_2024": 12665, "injured_2023": 36102, "injured_2024": 35540}, {"weather_condition": "Foggy & misty", "accidents_2023": 34266, "accidents_2024": 33955, "killed_2023": 14617, "killed_2024": 15115, "injured_2023": 30646, "injured_2024": 29827}, {"weather_condition": "Hail / sleet", "accidents_2023": 3378, "accidents_2024": 4310, "killed_2023": 1516, "killed_2024": 1919, "injured_2023": 3064, "injured_2024": 3835}, {"weather_condition": "Others", "accidents_2023": 39758, "accidents_2024": 41771, "killed_2023": 17958, "killed_2024": 18963, "injured_2023": 33939, "injured_2024": 36693}], "month": [{"month": "January", "accidents_2020": 40409, "killed_2020": 13529, "accidents_2021": 40305, "killed_2021": 14575, "accidents_2022": 37040, "killed_2022": 13677, "accidents_2023": 41841, "killed_2023": 14610, "accidents_2024": 40980, "killed_2024": 14398}, {"month": "February", "accidents_2020": 39905, "killed_2020": 13823, "accidents_2021": 37339, "killed_2021": 13864, "accidents_2022": 36617, "killed_2022": 13536, "accidents_2023": 39022, "killed_2023": 14279, "accidents_2024": 40023, "killed_2024": 14477}, {"month": "March", "accidents_2020": 32744, "killed_2020": 11646, "accidents_2021": 39491, "killed_2021": 14579, "accidents_2022": 40356, "killed_2022": 14859, "accidents_2023": 40549, "killed_2023": 14907, "accidents_2024": 43145, "killed_2024": 15809}, {"month": "April", "accidents_2020": 8389, "killed_2020": 3388, "accidents_2021": 31240, "killed_2021": 12226, "accidents_2022": 39033, "killed_2022": 14530, "accidents_2023": 39138, "killed_2023": 14438, "accidents_2024": 41781, "killed_2024": 15683}, {"month": "May", "accidents_2020": 20458, "killed_2020": 8261, "accidents_2021": 22530, "killed_2021": 10338, "accidents_2022": 43307, "killed_2022": 16791, "accidents_2023": 43578, "killed_2023": 16718, "accidents_2024": 43289, "killed_2024": 16070}, {"month": "June", "accidents_2020": 27946, "killed_2020": 11048, "accidents_2021": 29142, "killed_2021": 11985, "accidents_2022": 39432, "killed_2022": 14762, "accidents_2023": 40968, "killed_2023": 15253, "accidents_2024": 40031, "killed_2024": 14929}, {"month": "July", "accidents_2020": 27674, "killed_2020": 10527, "accidents_2021": 32627, "killed_2021": 12275, "accidents_2022": 36677, "killed_2022": 13119, "accidents_2023": 38088, "killed_2023": 13381, "accidents_2024": 36483, "killed_2024": 13033}, {"month": "August", "accidents_2020": 29753, "killed_2020": 11419, "accidents_2021": 33781, "killed_2021": 12109, "accidents_2022": 36451, "killed_2022": 12758, "accidents_2023": 38466, "killed_2023": 12843, "accidents_2024": 37651, "killed_2024": 12959}, {"month": "September", "accidents_2020": 31370, "killed_2020": 11722, "accidents_2021": 33269, "killed_2021": 11553, "accidents_2022": 34804, "killed_2022": 12071, "accidents_2023": 38143, "killed_2023": 12732, "accidents_2024": 37781, "killed_2024": 12841}, {"month": "October", "accidents_2020": 35376, "killed_2020": 12991, "accidents_2021": 36354, "killed_2021": 12763, "accidents_2022": 38650, "killed_2022": 13796, "accidents_2023": 40018, "killed_2023": 13822, "accidents_2024": 41986, "killed_2024": 15047}, {"month": "November", "accidents_2020": 38368, "killed_2020": 14624, "accidents_2021": 37581, "killed_2021": 13623, "accidents_2022": 38991, "killed_2022": 13888, "accidents_2023": 39775, "killed_2023": 14524, "accidents_2024": 42413, "killed_2024": 15922}, {"month": "December", "accidents_2020": 39789, "killed_2020": 15405, "accidents_2021": 38773, "killed_2021": 14082, "accidents_2022": 39954, "killed_2022": 14704, "accidents_2023": 40997, "killed_2023": 15383, "accidents_2024": 42144, "killed_2024": 16007}], "time_of_day": [{"time_interval": "06:00-09:00 hrs (Day)", "accidents_2020": 40431, "pct_2020": 10.9, "accidents_2021": 43370, "pct_2021": 10.5, "accidents_2022": 48304, "pct_2022": 10.5, "accidents_2023": 48872, "pct_2023": 10.2, "accidents_2024": 49395, "pct_2024": 10.1}, {"time_interval": "09:00-12:00 hrs (Day)", "accidents_2020": 55474, "pct_2020": 14.9, "accidents_2021": 61387, "pct_2021": 14.9, "accidents_2022": 65664, "pct_2022": 14.2, "accidents_2023": 67580, "pct_2023": 14.1, "accidents_2024": 68287, "pct_2024": 14.0}, {"time_interval": "12:00-15:00 hrs (Day)", "accidents_2020": 56570, "pct_2020": 15.2, "accidents_2021": 63139, "pct_2021": 15.3, "accidents_2022": 67979, "pct_2022": 14.7, "accidents_2023": 71697, "pct_2023": 14.9, "accidents_2024": 71386, "pct_2024": 14.6}, {"time_interval": "15:00-18:00 hrs (Day)", "accidents_2020": 65676, "pct_2020": 17.6, "accidents_2021": 73467, "pct_2021": 17.8, "accidents_2022": 79637, "pct_2022": 17.3, "accidents_2023": 84479, "pct_2023": 17.6, "accidents_2024": 85010, "pct_2024": 17.4}, {"time_interval": "18:00-21:00 hrs (Night)", "accidents_2020": 74198, "pct_2020": 19.9, "accidents_2021": 85179, "pct_2021": 20.7, "accidents_2022": 94009, "pct_2022": 20.4, "accidents_2023": 99945, "pct_2023": 20.8, "accidents_2024": 102897, "pct_2024": 21.1}, {"time_interval": "21:00-24:00 hrs (Night)", "accidents_2020": 37693, "pct_2020": 10.1, "accidents_2021": 41092, "pct_2021": 10.0, "accidents_2022": 52915, "pct_2022": 11.5, "accidents_2023": 55157, "pct_2023": 11.5, "accidents_2024": 56215, "pct_2024": 11.5}, {"time_interval": "00:00-03:00 hrs (Night)", "accidents_2020": 18466, "pct_2020": 5.0, "accidents_2021": 19682, "pct_2021": 4.8, "accidents_2022": 23471, "pct_2022": 5.1, "accidents_2023": 24298, "pct_2023": 5.1, "accidents_2024": 25001, "pct_2024": 5.1}, {"time_interval": "03:00-06:00 hrs (Night)", "accidents_2020": 19782, "pct_2020": 5.3, "accidents_2021": 20120, "pct_2021": 4.9, "accidents_2022": 24152, "pct_2022": 5.2, "accidents_2023": 22794, "pct_2023": 4.7, "accidents_2024": 23398, "pct_2024": 4.8}, {"time_interval": "Unknown Time", "accidents_2020": 3891, "pct_2020": 1.0, "accidents_2021": 4996, "pct_2021": 1.2, "accidents_2022": 5181, "pct_2022": 1.1, "accidents_2023": 5761, "pct_2023": 1.2, "accidents_2024": 6118, "pct_2024": 1.3}], "top_cities": [{"city": "Delhi", "accidents_2020": 4178, "accidents_2021": 4720, "accidents_2022": 5652, "accidents_2023": 5834, "accidents_2024": 5657}, {"city": "Bengaluru", "accidents_2020": 3233, "accidents_2021": 3213, "accidents_2022": 3822, "accidents_2023": 4974, "accidents_2024": 4769}, {"city": "Jabalpur", "accidents_2020": 3226, "accidents_2021": 3855, "accidents_2022": 4046, "accidents_2023": 4205, "accidents_2024": 3928}, {"city": "Hyderabad", "accidents_2020": 2064, "accidents_2021": 2273, "accidents_2022": 2516, "accidents_2023": 2943, "accidents_2024": 3785}, {"city": "Chennai", "accidents_2020": 4389, "accidents_2021": 5034, "accidents_2022": 3452, "accidents_2023": 3653, "accidents_2024": 3762}, {"city": "Indore", "accidents_2020": 3036, "accidents_2021": 3676, "accidents_2022": 4680, "accidents_2023": 3566, "accidents_2024": 3488}, {"city": "Mallapuram", "accidents_2020": 1784, "accidents_2021": 2147, "accidents_2022": 2991, "accidents_2023": 3253, "accidents_2024": 3483}, {"city": "Kochi", "accidents_2020": 1437, "accidents_2021": 1781, "accidents_2022": 2432, "accidents_2023": 2803, "accidents_2024": 3167}, {"city": "Jaipur", "accidents_2020": 1940, "accidents_2021": 2165, "accidents_2022": 2687, "accidents_2023": 2915, "accidents_2024": 3115}, {"city": "Bhopal", "accidents_2020": 2295, "accidents_2021": 2616, "accidents_2022": 3313, "accidents_2023": 2906, "accidents_2024": 2900}], "age": [{"age_group": "Less than 18", "killed_2023": 9489, "killed_2024": 10117}, {"age_group": "18-25", "killed_2023": 34482, "killed_2024": 34154}, {"age_group": "25-35", "killed_2023": 43398, "killed_2024": 44581}, {"age_group": "35-45", "killed_2023": 36981, "killed_2024": 38291}, {"age_group": "45-60", "killed_2023": 29421, "killed_2024": 30560}, {"age_group": "Above 60", "killed_2023": 14428, "killed_2024": 14767}, {"age_group": "Age not known", "killed_2023": 4691, "killed_2024": 4705}], "license": [{"license_type": "Valid driving licence", "accidents_2020": 264991, "accidents_2021": 290261, "accidents_2022": 320235, "accidents_2023": 340960, "accidents_2024": 332462}, {"license_type": "Learner's licence", "accidents_2020": 19117, "accidents_2021": 19184, "accidents_2022": 18298, "accidents_2023": 16074, "accidents_2024": 16494}, {"license_type": "Without valid licence", "accidents_2020": 34716, "accidents_2021": 37182, "accidents_2022": 35925, "accidents_2023": 33827, "accidents_2024": 35347}, {"license_type": "Not known", "accidents_2020": 53357, "accidents_2021": 65805, "accidents_2022": 86854, "accidents_2023": 89722, "accidents_2024": 103404}]};
+
+const inkDim = getComputedStyle(document.documentElement).getPropertyValue('--ink-dim').trim() || '#9aa3b5';
+const line = getComputedStyle(document.documentElement).getPropertyValue('--line').trim() || '#2a3040';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.color = inkDim;
+Chart.defaults.font.size = 11;
+
+function grid(show) { return { color: line, display: show }; }
+
+const palette = {
+  amber: '#f2a33e', red: '#e6533f', teal: '#3ecf9e', blue: '#5b8def', violet: '#9c7cf4', dim: '#616b81'
+};
+
+// ---- Trend chart ----
+const years = [2020,2021,2022,2023,2024];
+const totAcc = years.map(y => DATA.state_acc.reduce((s,r) => s + (r['accidents_'+y]||0), 0));
+new Chart(document.getElementById('trendChart'), {
+  type: 'line',
+  data: {
+    labels: years,
+    datasets: [
+      { label: 'Accidents', data: totAcc, borderColor: palette.amber, backgroundColor: 'transparent', tension: 0.3, yAxisID: 'y' },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: grid(false) },
+      y: { grid: grid(true), ticks: { callback: v => (v/1000)+'k' } }
+    }
+  }
+});
+
+// ---- Violation chart ----
+const vSorted = [...DATA.violation].sort((a,b) => b.accidents_2024 - a.accidents_2024);
+new Chart(document.getElementById('violationChart'), {
+  type: 'bar',
+  data: {
+    labels: vSorted.map(r => r.violation_type.length > 22 ? r.violation_type.slice(0,20)+'…' : r.violation_type),
+    datasets: [{ data: vSorted.map(r => r.accidents_2024), backgroundColor: palette.red, borderRadius: 4 }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { x: { grid: grid(true) }, y: { grid: grid(false) } }
+  }
+});
+
+// ---- Time of day chart ----
+new Chart(document.getElementById('timeChart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.time_of_day.map(r => r.time_interval.replace(' hrs','').replace(' (Day)','').replace(' (Night)','')),
+    datasets: [{ data: DATA.time_of_day.map(r => r.pct_2024), backgroundColor: palette.blue, borderRadius: 4 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: grid(false), ticks: { maxRotation: 45, minRotation: 45 } },
+      y: { grid: grid(true), ticks: { callback: v => v+'%' } }
+    }
+  }
+});
+
+// ---- Month chart ----
+new Chart(document.getElementById('monthChart'), {
+  type: 'line',
+  data: {
+    labels: DATA.month.map(r => r.month.slice(0,3)),
+    datasets: [{ data: DATA.month.map(r => r.accidents_2024), borderColor: palette.teal, backgroundColor: 'rgba(62,207,158,0.1)', fill: true, tension: 0.35 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { x: { grid: grid(false) }, y: { grid: grid(true), ticks: { callback: v => (v/1000)+'k' } } }
+  }
+});
+
+// ---- State chart (top 10) ----
+const stateSorted = [...DATA.state_acc].sort((a,b) => b.accidents_2024 - a.accidents_2024).slice(0,10);
+new Chart(document.getElementById('stateChart'), {
+  type: 'bar',
+  data: {
+    labels: stateSorted.map(r => r.state_ut),
+    datasets: [{ data: stateSorted.map(r => r.accidents_2024), backgroundColor: palette.violet, borderRadius: 4 }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { x: { grid: grid(true) }, y: { grid: grid(false) } }
+  }
+});
+
+// ---- City chart ----
+new Chart(document.getElementById('cityChart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.top_cities.map(r => r.city),
+    datasets: [{ data: DATA.top_cities.map(r => r.accidents_2024), backgroundColor: palette.amber, borderRadius: 4 }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { x: { grid: grid(true) }, y: { grid: grid(false) } }
+  }
+});
+
+// ---- Weather donut ----
+new Chart(document.getElementById('weatherChart'), {
+  type: 'doughnut',
+  data: {
+    labels: DATA.weather.map(r => r.weather_condition),
+    datasets: [{ data: DATA.weather.map(r => r.accidents_2024), backgroundColor: [palette.amber, palette.blue, palette.dim, palette.red, palette.teal] }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } }
+  }
+});
+
+// ---- Age bar ----
+new Chart(document.getElementById('ageChart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.age.map(r => r.age_group),
+    datasets: [{ data: DATA.age.map(r => r.killed_2024), backgroundColor: palette.red, borderRadius: 4 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { x: { grid: grid(false), ticks: { maxRotation: 45, minRotation: 45, font: { size: 9 } } }, y: { grid: grid(true) } }
+  }
+});
+
+// ---- State table ----
+const tbody = document.querySelector('#stateTable tbody');
+const allSorted = [...DATA.state_acc].sort((a,b) => b.accidents_2024 - a.accidents_2024);
+allSorted.forEach((r, i) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${i+1}</td><td>${r.state_ut}</td><td class="num">${r.accidents_2024.toLocaleString('en-IN')}</td><td class="num">${Math.round(r.accidents_2020).toLocaleString('en-IN')}</td>`;
+  tbody.appendChild(tr);
+});
+</script>
 </body>
 </html>
