@@ -130,7 +130,13 @@
 <div class="wrap">
 
   <div class="hero">
-    <span class="badge">Data Analytics Project</span>
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;">
+      <span class="badge">Data Analytics Project</span>
+      <button id="themeToggle" aria-label="Toggle dark/light mode"
+        style="background:var(--asphalt-3); border:1px solid var(--line); color:var(--ink); border-radius:8px; padding:8px 14px; font-family:var(--font-mono); font-size:12px; cursor:pointer;">
+        ☀ / ☾ Toggle theme
+      </button>
+    </div>
     <h1 class="title">Road Safety<br><span>on India's Highways</span></h1>
     <div class="hero-sub">Five years of accidents, causes, timing and geography — tracked from the Ministry of Road Transport &amp; Highways' national report, 2020 to 2024.</div>
     <div class="hero-meta">SOURCE: MoRTH — "ROAD ACCIDENTS IN INDIA 2024" · YEARS: 2020–2024 · BUILT BY SONU SINGH</div>
@@ -217,6 +223,49 @@
       <h2>Victim age group</h2>
       <div class="note">Fatalities, 2024</div>
       <div class="chart-box short"><canvas id="ageChart"></canvas></div>
+    </div>
+  </div>
+
+  <h3 class="section-title">India at a glance</h3>
+  <div class="panel">
+    <h2>State grid map</h2>
+    <div class="note">Each tile = one state/UT, positioned by approximate location, colored by 2024 accident count. Darker = higher. (Grid layout, not exact borders.)</div>
+    <div id="indiaGrid" style="display:grid; grid-template-columns: repeat(9, 1fr); grid-auto-rows: 40px; gap: 4px; margin-top:14px;"></div>
+    <div style="display:flex; align-items:center; gap:8px; margin-top:12px; font-size:11px; color:var(--ink-faint); font-family:var(--font-mono);">
+      <span>LOW</span>
+      <div style="flex:1; height:8px; border-radius:4px; background:linear-gradient(90deg, #2a2e38, var(--yellow), var(--red));"></div>
+      <span>HIGH</span>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:16px;">
+    <div class="panel">
+      <h2>Compare two states</h2>
+      <div class="note">Pick any two states/UTs to see them side by side, 2020–2024</div>
+      <div style="display:flex; gap:10px; margin:14px 0;">
+        <select id="stateA" style="flex:1; padding:9px; background:var(--asphalt-3); border:1px solid var(--line); border-radius:8px; color:var(--ink); font-family:var(--font-body);"></select>
+        <select id="stateB" style="flex:1; padding:9px; background:var(--asphalt-3); border:1px solid var(--line); border-radius:8px; color:var(--ink); font-family:var(--font-body);"></select>
+      </div>
+      <div class="chart-box"><canvas id="compareChart"></canvas></div>
+      <div id="compareStats" style="display:flex; gap:16px; margin-top:12px; font-size:12.5px; color:var(--ink-dim);"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Risk score calculator</h2>
+      <div class="note">Indicative only — based on each factor's historical share of accidents (2024), not a predictive model.</div>
+      <div style="margin:14px 0 10px;">
+        <label style="font-size:12px; color:var(--ink-faint); font-family:var(--font-mono);">TIME OF DAY</label>
+        <select id="riskTime" style="width:100%; margin-top:6px; padding:9px; background:var(--asphalt-3); border:1px solid var(--line); border-radius:8px; color:var(--ink); font-family:var(--font-body);"></select>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; color:var(--ink-faint); font-family:var(--font-mono);">WEATHER</label>
+        <select id="riskWeather" style="width:100%; margin-top:6px; padding:9px; background:var(--asphalt-3); border:1px solid var(--line); border-radius:8px; color:var(--ink); font-family:var(--font-body);"></select>
+      </div>
+      <div id="riskResult" style="text-align:center; padding:22px; border-radius:10px; background:var(--asphalt-3); border:1px solid var(--line);">
+        <div style="font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); margin-bottom:6px;">COMBINED RISK INDEX</div>
+        <div id="riskLabel" style="font-family:var(--font-head); font-size:26px; text-transform:uppercase;">—</div>
+        <div id="riskSub" style="font-size:12px; color:var(--ink-dim); margin-top:6px;"></div>
+      </div>
     </div>
   </div>
 
@@ -362,6 +411,127 @@ function renderStateRows(list) {
   });
 }
 renderStateRows(allSorted);
+
+// ---- Theme toggle (per-viewer, saved locally) ----
+const root = document.documentElement;
+try {
+  const saved = localStorage.getItem('rsd-theme');
+  if (saved) root.setAttribute('data-theme', saved);
+} catch(e) {}
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const current = root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  try { localStorage.setItem('rsd-theme', next); } catch(e) {}
+});
+
+// ---- India state grid map ----
+const gridPos = {
+  "Jammu and Kashmir":[1,4],"Ladakh":[1,5],"Himachal Pradesh":[2,4],"Arunachal Pradesh":[2,9],
+  "Punjab":[3,3],"Chandigarh":[3,4],"Uttarakhand":[3,5],"Sikkim":[3,8],"Nagaland":[3,9],
+  "Haryana":[4,3],"Delhi":[4,4],"Uttar Pradesh":[4,5],"Bihar":[4,6],"Assam":[4,8],"Manipur":[4,9],
+  "Rajasthan":[5,2],"Madhya Pradesh":[5,4],"Jharkhand":[5,6],"West Bengal":[5,7],"Meghalaya":[5,8],"Tripura":[5,9],
+  "Gujarat":[6,1],"D & N Haveli and Daman and Diu":[6,2],"Chhattisgarh":[6,5],"Odisha":[6,6],"Mizoram":[6,9],
+  "Maharashtra":[7,2],"Telangana":[7,5],
+  "Goa":[8,1],"Karnataka":[8,2],"Andhra Pradesh":[8,4],
+  "Kerala":[9,1],"Tamil Nadu":[9,3],"Puducherry":[9,4],
+  "Andaman & Nicobar Islands":[10,5],"Lakshadweep":[9,0]
+};
+const gridEl = document.getElementById('indiaGrid');
+const maxAcc = Math.max(...DATA.state_acc.map(r => r.accidents_2024 || 0));
+function accColor(v) {
+  const t = Math.min(v / maxAcc, 1);
+  // interpolate asphalt(42,46,56) -> yellow(255,201,60) -> red(230,71,46)
+  if (t < 0.5) {
+    const k = t / 0.5;
+    return `rgb(${42+k*(255-42)}, ${46+k*(201-46)}, ${56+k*(60-56)})`;
+  }
+  const k = (t - 0.5) / 0.5;
+  return `rgb(${255+k*(230-255)}, ${201+k*(71-201)}, ${60+k*(46-60)})`;
+}
+DATA.state_acc.forEach(r => {
+  const pos = gridPos[r.state_ut];
+  if (!pos) return;
+  const tile = document.createElement('div');
+  tile.title = `${r.state_ut}: ${Math.round(r.accidents_2024).toLocaleString('en-IN')} accidents (2024)`;
+  tile.style.cssText = `grid-row:${pos[0]}; grid-column:${pos[1]}; background:${accColor(r.accidents_2024)}; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:9px; font-family:var(--font-mono); color:#14161b; font-weight:600; cursor:default;`;
+  tile.textContent = r.state_ut.split(' ').map(w => w[0]).join('').slice(0,3).toUpperCase();
+  gridEl.appendChild(tile);
+});
+
+// ---- Compare two states ----
+const stateNames = DATA.state_acc.map(r => r.state_ut).sort();
+const selA = document.getElementById('stateA');
+const selB = document.getElementById('stateB');
+stateNames.forEach(n => {
+  selA.innerHTML += `<option value="${n}">${n}</option>`;
+  selB.innerHTML += `<option value="${n}">${n}</option>`;
+});
+selA.value = "Tamil Nadu"; selB.value = "Kerala";
+
+let compareChartInstance = null;
+function renderCompare() {
+  const a = DATA.state_acc.find(r => r.state_ut === selA.value);
+  const b = DATA.state_acc.find(r => r.state_ut === selB.value);
+  const aKill = DATA.state_kill.find(r => r.state_ut === selA.value) || {};
+  const bKill = DATA.state_kill.find(r => r.state_ut === selB.value) || {};
+  const yrs = [2020,2021,2022,2023,2024];
+
+  if (compareChartInstance) compareChartInstance.destroy();
+  compareChartInstance = new Chart(document.getElementById('compareChart'), {
+    type: 'bar',
+    data: {
+      labels: yrs,
+      datasets: [
+        { label: selA.value, data: yrs.map(y => a['accidents_'+y]||0), backgroundColor: palette.yellow, borderRadius: 3 },
+        { label: selB.value, data: yrs.map(y => b['accidents_'+y]||0), backgroundColor: palette.blue, borderRadius: 3 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } } },
+      scales: { x: { grid: grid(false) }, y: { grid: grid(true) } }
+    }
+  });
+
+  const rateA = a.accidents_2024 ? ((aKill.killed_2024||0)/a.accidents_2024*100).toFixed(1) : '0.0';
+  const rateB = b.accidents_2024 ? ((bKill.killed_2024||0)/b.accidents_2024*100).toFixed(1) : '0.0';
+  document.getElementById('compareStats').innerHTML = `
+    <div><strong style="color:var(--yellow);">${selA.value}</strong>: ${Math.round(a.accidents_2024).toLocaleString('en-IN')} accidents, ${Math.round(aKill.killed_2024||0).toLocaleString('en-IN')} killed (${rateA}% fatality rate), 2024</div>
+    <div><strong style="color:var(--blue);">${selB.value}</strong>: ${Math.round(b.accidents_2024).toLocaleString('en-IN')} accidents, ${Math.round(bKill.killed_2024||0).toLocaleString('en-IN')} killed (${rateB}% fatality rate), 2024</div>
+  `;
+}
+selA.addEventListener('change', renderCompare);
+selB.addEventListener('change', renderCompare);
+renderCompare();
+
+// ---- Risk score calculator ----
+const riskTimeSel = document.getElementById('riskTime');
+const riskWeatherSel = document.getElementById('riskWeather');
+DATA.time_of_day.forEach(r => riskTimeSel.innerHTML += `<option value="${r.pct_2024}">${r.time_interval}</option>`);
+DATA.weather.forEach(r => {
+  const totalWeatherAcc = DATA.weather.reduce((s,w) => s + w.accidents_2024, 0);
+  const share = (r.accidents_2024 / totalWeatherAcc * 100).toFixed(1);
+  riskWeatherSel.innerHTML += `<option value="${share}">${r.weather_condition}</option>`;
+});
+
+function renderRisk() {
+  const t = parseFloat(riskTimeSel.value);
+  const w = parseFloat(riskWeatherSel.value);
+  const score = (t + w) / 2; // simple average of two historical shares
+  const label = document.getElementById('riskLabel');
+  const sub = document.getElementById('riskSub');
+  let text, color;
+  if (score < 8) { text = 'Low'; color = palette.green; }
+  else if (score < 15) { text = 'Moderate'; color = palette.yellow; }
+  else { text = 'Elevated'; color = palette.red; }
+  label.textContent = text;
+  label.style.color = color;
+  sub.textContent = `Combined historical share: ${score.toFixed(1)}% — based on 2024 national data for this time slot + weather`;
+}
+riskTimeSel.addEventListener('change', renderRisk);
+riskWeatherSel.addEventListener('change', renderRisk);
+renderRisk();
 
 // ---- Search + full state detail ----
 const searchBox = document.getElementById('stateSearch');
