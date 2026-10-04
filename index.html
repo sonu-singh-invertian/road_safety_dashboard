@@ -128,6 +128,16 @@
   .rank { font-family: var(--font-mono); color: var(--ink-faint); }
 
   footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--ink-faint); font-family: var(--font-mono); }
+
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  .dl-btn {
+    margin-top: 10px; background: transparent; border: 1px solid var(--line); color: var(--ink-dim);
+    border-radius: 6px; padding: 5px 10px; font-family: var(--font-mono); font-size: 10.5px;
+    cursor: pointer; transition: border-color 0.2s, color 0.2s;
+  }
+  .dl-btn:hover { border-color: var(--yellow); color: var(--yellow); }
 </style>
 </head>
 <body>
@@ -174,7 +184,7 @@
     </div>
   </div>
 
-  <div class="panel no-print" style="margin-bottom:24px;">
+  <div class="panel no-print reveal" style="margin-bottom:24px;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
       <h2 style="margin:0;">Scrub through the years</h2>
       <span id="yearSliderVal" style="font-family:var(--font-mono); font-size:20px; color:var(--yellow); font-weight:700;">2024</span>
@@ -189,15 +199,17 @@
   </div>
 
   <div class="grid">
-    <div class="panel">
+    <div class="panel reveal">
       <h2>National trend</h2>
       <div class="note">Accidents, 2020–2024</div>
       <div class="chart-box tall"><canvas id="trendChart"></canvas></div>
+      <button class="dl-btn no-print" data-chart="trendChart">⬇ Download chart as PNG</button>
     </div>
-    <div class="panel">
+    <div class="panel reveal">
       <h2>Cause of accident</h2>
       <div class="note">Share of total, 2024</div>
       <div class="chart-box tall"><canvas id="violationChart"></canvas></div>
+      <button class="dl-btn no-print" data-chart="violationChart">⬇ Download chart as PNG</button>
     </div>
   </div>
 
@@ -208,62 +220,68 @@
 
   <h3 class="section-title">Timing</h3>
   <div class="grid">
-    <div class="panel">
+    <div class="panel reveal">
       <h2>Accidents by hour of day</h2>
       <div class="note">2024 — evening hours are consistently the riskiest window</div>
       <div class="chart-box tall"><canvas id="timeChart"></canvas></div>
+      <button class="dl-btn no-print" data-chart="timeChart">⬇ Download chart as PNG</button>
     </div>
-    <div class="panel">
+    <div class="panel reveal">
       <h2>Month-wise trend</h2>
       <div class="note">Accidents, 2024</div>
       <div class="chart-box tall"><canvas id="monthChart"></canvas></div>
+      <button class="dl-btn no-print" data-chart="monthChart">⬇ Download chart as PNG</button>
     </div>
   </div>
 
   <h3 class="section-title">Geography</h3>
   <div class="grid">
-    <div class="panel">
+    <div class="panel reveal">
       <h2>Top 10 states</h2>
       <div class="note">By accidents, 2024</div>
       <div class="chart-box tall"><canvas id="stateChart"></canvas></div>
+      <button class="dl-btn no-print" data-chart="stateChart">⬇ Download chart as PNG</button>
     </div>
-    <div class="panel">
+    <div class="panel reveal">
       <h2>Top 10 million-plus cities</h2>
       <div class="note">By accidents, 2024</div>
       <div class="chart-box tall"><canvas id="cityChart"></canvas></div>
+      <button class="dl-btn no-print" data-chart="cityChart">⬇ Download chart as PNG</button>
     </div>
   </div>
 
   <h3 class="section-title">Context</h3>
   <div class="grid thirds">
-    <div class="panel">
+    <div class="panel reveal">
       <h2>Weather condition</h2>
       <div class="note">2024 accident share</div>
       <div class="chart-box short"><canvas id="weatherChart"></canvas></div>
+      <button class="dl-btn no-print" data-chart="weatherChart">⬇ Download chart as PNG</button>
     </div>
-    <div class="panel">
+    <div class="panel reveal">
       <h2>Victim age group</h2>
       <div class="note">Fatalities, 2024</div>
       <div class="chart-box short"><canvas id="ageChart"></canvas></div>
+      <button class="dl-btn no-print" data-chart="ageChart">⬇ Download chart as PNG</button>
     </div>
   </div>
 
   <h3 class="section-title">India at a glance</h3>
   <div class="grid thirds" style="margin-bottom:16px;">
-    <div class="panel" style="border-left:3px solid var(--green);">
+    <div class="panel reveal" style="border-left:3px solid var(--green);">
       <h2 style="color:var(--green);">🛡 Safest state</h2>
       <div class="note">Lowest fatality rate, 2024 (among states with 500+ accidents)</div>
       <div id="safestState" style="font-family:var(--font-head); font-size:24px; text-transform:uppercase; margin-top:8px;">—</div>
       <div id="safestStat" style="font-size:12.5px; color:var(--ink-dim); margin-top:4px;"></div>
     </div>
-    <div class="panel" style="border-left:3px solid var(--red);">
+    <div class="panel reveal" style="border-left:3px solid var(--red);">
       <h2 style="color:var(--red);">⚠ Most dangerous state</h2>
       <div class="note">Highest fatality rate, 2024 (among states with 500+ accidents)</div>
       <div id="dangerState" style="font-family:var(--font-head); font-size:24px; text-transform:uppercase; margin-top:8px;">—</div>
       <div id="dangerStat" style="font-size:12.5px; color:var(--ink-dim); margin-top:4px;"></div>
     </div>
   </div>
-  <div class="panel">
+  <div class="panel reveal">
     <h2>State grid map</h2>
     <div class="note">Each tile = one state/UT, positioned by approximate location, colored by 2024 accident count. Darker = higher. (Grid layout, not exact borders.)</div>
     <div id="indiaGrid" style="display:grid; grid-template-columns: repeat(9, 1fr); grid-auto-rows: 40px; gap: 4px; margin-top:14px;"></div>
@@ -275,7 +293,7 @@
   </div>
 
   <div class="grid" style="margin-top:16px;">
-    <div class="panel">
+    <div class="panel reveal">
       <h2>Compare two states</h2>
       <div class="note">Pick any two states/UTs to see them side by side, 2020–2024</div>
       <div style="display:flex; gap:10px; margin:14px 0;">
@@ -283,10 +301,11 @@
         <select id="stateB" style="flex:1; padding:9px; background:var(--asphalt-3); border:1px solid var(--line); border-radius:8px; color:var(--ink); font-family:var(--font-body);"></select>
       </div>
       <div class="chart-box"><canvas id="compareChart"></canvas></div>
+      <button class="dl-btn no-print" data-chart="compareChart">⬇ Download chart as PNG</button>
       <div id="compareStats" style="display:flex; gap:16px; margin-top:12px; font-size:12.5px; color:var(--ink-dim);"></div>
     </div>
 
-    <div class="panel">
+    <div class="panel reveal">
       <h2>Risk score calculator</h2>
       <div class="note">Indicative only — based on each factor's historical share of accidents (2024), not a predictive model.</div>
       <div style="margin:14px 0 10px;">
@@ -306,7 +325,7 @@
   </div>
 
   <h3 class="section-title">Full state data</h3>
-  <div class="panel">
+  <div class="panel reveal">
     <h2>All states &amp; UTs</h2>
     <div class="note">Type a state name to pull up its full 5-year record, or just browse the ranked list.</div>
     <input id="stateSearch" type="text" placeholder="Search a state or UT…" autocomplete="off"
@@ -345,6 +364,7 @@ function grid(show) { return { color: gridColor, display: show }; }
 const palette = {
   yellow: '#ffc93c', red: '#e6472e', green: '#4fb787', blue: '#5b8def', violet: '#9c7cf4', dim: '#676c7a'
 };
+const chartRegistry = {};
 
 // ---- count-up animation for hero KPIs ----
 function countUp(el, target, duration) {
@@ -362,7 +382,7 @@ function countUp(el, target, duration) {
 // ---- Trend chart ----
 const years = [2020,2021,2022,2023,2024];
 const totAcc = years.map(y => DATA.state_acc.reduce((s,r) => s + (r['accidents_'+y]||0), 0));
-new Chart(document.getElementById('trendChart'), {
+chartRegistry['trendChart'] = new Chart(document.getElementById('trendChart'), {
   type: 'line',
   data: { labels: years, datasets: [{ data: totAcc, borderColor: palette.yellow, backgroundColor: 'rgba(255,201,60,0.08)', fill: true, tension: 0.3, pointBackgroundColor: palette.yellow, pointRadius: 4 }] },
   options: {
@@ -374,7 +394,7 @@ new Chart(document.getElementById('trendChart'), {
 
 // ---- Violation chart ----
 const vSorted = [...DATA.violation].sort((a,b) => b.accidents_2024 - a.accidents_2024);
-new Chart(document.getElementById('violationChart'), {
+chartRegistry['violationChart'] = new Chart(document.getElementById('violationChart'), {
   type: 'bar',
   data: { labels: vSorted.map(r => r.violation_type.length > 22 ? r.violation_type.slice(0,20)+'…' : r.violation_type),
     datasets: [{ data: vSorted.map(r => r.accidents_2024), backgroundColor: palette.red, borderRadius: 4 }] },
@@ -383,7 +403,7 @@ new Chart(document.getElementById('violationChart'), {
 });
 
 // ---- Time of day chart ----
-new Chart(document.getElementById('timeChart'), {
+chartRegistry['timeChart'] = new Chart(document.getElementById('timeChart'), {
   type: 'bar',
   data: { labels: DATA.time_of_day.map(r => r.time_interval.replace(' hrs','').replace(' (Day)','').replace(' (Night)','')),
     datasets: [{ data: DATA.time_of_day.map(r => r.pct_2024), backgroundColor: palette.blue, borderRadius: 4 }] },
@@ -392,7 +412,7 @@ new Chart(document.getElementById('timeChart'), {
 });
 
 // ---- Month chart ----
-new Chart(document.getElementById('monthChart'), {
+chartRegistry['monthChart'] = new Chart(document.getElementById('monthChart'), {
   type: 'line',
   data: { labels: DATA.month.map(r => r.month.slice(0,3)),
     datasets: [{ data: DATA.month.map(r => r.accidents_2024), borderColor: palette.green, backgroundColor: 'rgba(79,183,135,0.12)', fill: true, tension: 0.35, pointRadius: 3 }] },
@@ -402,7 +422,7 @@ new Chart(document.getElementById('monthChart'), {
 
 // ---- State chart ----
 const stateSorted = [...DATA.state_acc].sort((a,b) => b.accidents_2024 - a.accidents_2024).slice(0,10);
-new Chart(document.getElementById('stateChart'), {
+chartRegistry['stateChart'] = new Chart(document.getElementById('stateChart'), {
   type: 'bar',
   data: { labels: stateSorted.map(r => r.state_ut), datasets: [{ data: stateSorted.map(r => r.accidents_2024), backgroundColor: palette.violet, borderRadius: 4 }] },
   options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
@@ -410,7 +430,7 @@ new Chart(document.getElementById('stateChart'), {
 });
 
 // ---- City chart ----
-new Chart(document.getElementById('cityChart'), {
+chartRegistry['cityChart'] = new Chart(document.getElementById('cityChart'), {
   type: 'bar',
   data: { labels: DATA.top_cities.map(r => r.city), datasets: [{ data: DATA.top_cities.map(r => r.accidents_2024), backgroundColor: palette.yellow, borderRadius: 4 }] },
   options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
@@ -418,21 +438,20 @@ new Chart(document.getElementById('cityChart'), {
 });
 
 // ---- Weather donut ----
-new Chart(document.getElementById('weatherChart'), {
+chartRegistry['weatherChart'] = new Chart(document.getElementById('weatherChart'), {
   type: 'doughnut',
   data: { labels: DATA.weather.map(r => r.weather_condition), datasets: [{ data: DATA.weather.map(r => r.accidents_2024), backgroundColor: [palette.yellow, palette.blue, palette.dim, palette.red, palette.green] }] },
   options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
 });
 
 // ---- Age bar ----
-new Chart(document.getElementById('ageChart'), {
+chartRegistry['ageChart'] = new Chart(document.getElementById('ageChart'), {
   type: 'bar',
   data: { labels: DATA.age.map(r => r.age_group), datasets: [{ data: DATA.age.map(r => r.killed_2024), backgroundColor: palette.red, borderRadius: 4 }] },
   options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
     scales: { x: { grid: grid(false), ticks: { maxRotation: 45, minRotation: 45, font: { size: 9 } } }, y: { grid: grid(true) } } }
 });
 
-// ---- State table ----
 const tbody = document.querySelector('#stateTable tbody');
 const allSorted = [...DATA.state_acc].sort((a,b) => b.accidents_2024 - a.accidents_2024);
 
@@ -585,7 +604,7 @@ function renderCompare() {
   const yrs = [2020,2021,2022,2023,2024];
 
   if (compareChartInstance) compareChartInstance.destroy();
-  compareChartInstance = new Chart(document.getElementById('compareChart'), {
+  compareChartInstance = chartRegistry['compareChart'] = new Chart(document.getElementById('compareChart'), {
     type: 'bar',
     data: {
       labels: yrs,
@@ -677,6 +696,28 @@ searchBox.addEventListener('input', () => {
     detailBox.style.display = 'none';
   }
 });
+
+// ---- Chart download buttons ----
+document.querySelectorAll('.dl-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = btn.getAttribute('data-chart');
+    const chart = chartRegistry[key];
+    if (!chart) return;
+    const a = document.createElement('a');
+    a.href = chart.toBase64Image();
+    a.download = key + '.png';
+    a.click();
+  });
+});
+
+// ---- Scroll reveal animation ----
+const revealEls = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+  });
+}, { threshold: 0.08 });
+revealEls.forEach(el => io.observe(el));
 </script>
 </body>
 </html>
